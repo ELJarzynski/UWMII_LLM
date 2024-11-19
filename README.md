@@ -20,6 +20,7 @@ Make sure you have Docker installed on your machine.
    ```bash
    git clone <repository-url>
    cd <repository-directory>
+   cd LLM
 2. **Build and run the Docker containers:**
    ```bash
    docker-compose up --build

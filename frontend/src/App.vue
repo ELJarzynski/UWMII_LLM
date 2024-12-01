@@ -80,14 +80,18 @@ export default {
     },
 
     async getBotResponse() {
-      try {
-        const response = await axios.get('http://localhost:8000/api/get-response/');
+    try {
+        const response = await axios.post('http://localhost:8000/api/get-response-from-rag/', {
+            message: this.userMessage, // Wysłanie wiadomości jako JSON
+        });
         this.botResponse = response.data.response;
-      } catch (error) {
+    } catch (error) {
         console.error('Error:', error);
         this.botResponse = 'Wystąpił błąd podczas pobierania odpowiedzi.';
-      }
-    },
+    }
+},
+
+
 
     async loadChatHistory() {
       try {

@@ -3,7 +3,7 @@ from langchain_chroma import Chroma
 from langchain.prompts import ChatPromptTemplate
 from langchain_ollama import OllamaLLM, OllamaEmbeddings
 
-CHROMA_PATH = "database"
+CHROMA_PATH = "../LLM/chat/database"
 
 PROMPT_TEMPLATE = """
 You are a helpful assistant answering questions based strictly on the provided context. 

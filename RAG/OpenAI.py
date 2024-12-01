@@ -8,22 +8,21 @@ from langchain.chains.question_answering import load_qa_chain
 from langchain_community.chat_models import ChatOpenAI
 
 import os
-from dotenv import load_dotenv  # Importujemy funkcję load_dotenv
+from dotenv import load_dotenv
 
-# Ładowanie zmiennych środowiskowych z pliku .env
+
 load_dotenv()
 
-# Teraz możesz uzyskać dostęp do zmiennej OPENAI_API_KEY
 openai_api_key = os.getenv("OPENAI_API_KEY")
 if openai_api_key is None:
     raise ValueError("OPENAI_API_KEY is not set in the environment")
 
-# Funkcja ładowania dokumentów PDF
+
 def load_documents():
     document_loader = PyPDFDirectoryLoader("data")
     return document_loader.load()
 
-# Funkcja dzielenia dokumentów na fragmenty
+
 def split_documents(documents: list[Document]):
     text_splitter = CharacterTextSplitter(
         chunk_size=800,
@@ -33,12 +32,12 @@ def split_documents(documents: list[Document]):
     )
     return text_splitter.split_documents(documents)
 
-# Funkcja do uzyskiwania embeddings z OpenAI
+
 def embedding_fun():
     embeddings = OpenAIEmbeddings(api_key=openai_api_key)  # Przekazanie klucza API do OpenAI
     return embeddings
 
-# Funkcja do przygotowania bazy danych Chroma
+
 def prepare_db(embedding_function):
     db = Chroma(
         persist_directory="database",
@@ -46,12 +45,12 @@ def prepare_db(embedding_function):
     )
     return db
 
-# Funkcja do wyszukiwania w bazie danych Chroma
+
 def search_db(db, query_text):
     docs = db.similarity_search(query_text)
     return docs
 
-# Funkcja generująca odpowiedź za pomocą OpenAI
+
 def generate_response(results, query_text):
     chat_model = ChatOpenAI(model="gpt-4", temperature=0.5, api_key=openai_api_key)
 
@@ -59,7 +58,7 @@ def generate_response(results, query_text):
     response = conversation_chain.run(input_documents=results, question=query_text)
     return response
 
-# Główna funkcja zapytania RAG
+
 def query_rag(query_text: str):
     embedding_function = embedding_fun()
     db = prepare_db(embedding_function)

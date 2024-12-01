@@ -1,37 +1,70 @@
+import os
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view
-from rest_framework.response import Response
 from .models import ChatHistory
-from langchain_groq import ChatGroq
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.output_parsers import StrOutputParser
+from langchain_community.document_loaders import PyPDFDirectoryLoader
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_chroma import Chroma
+from langchain_ollama import OllamaEmbeddings, OllamaLLM
+from langchain.prompts import ChatPromptTemplate
 from django.conf import settings
 
 
-chat_history = []
+CHROMA_PATH = settings.CHROMA_PATH
 
-def get_chat_history(request):
+# Funkcja generująca odpowiedź z modelu Ollama
+def generate_response_from_rag(query_text: str):
+    db = Chroma(persist_directory=CHROMA_PATH, embedding_function=OllamaEmbeddings(model="nomic-embed-text"))
+    results = db.similarity_search_with_score(query_text, k=5)
+
+    context_text = "\n\n---\n\n".join([doc.page_content for doc, _score in results])
+    prompt_template = ChatPromptTemplate.from_template("""
+    You are a helpful assistant answering questions based strictly on the provided context. 
+    Provide a detailed and well-explained response, including examples if possible. 
+    If the answer to the question cannot be found in the context, do not reply or make anything up.
+
+    Context:
+    {context}
+
+    ---
+
+    Question:
+    {question}
+
+    Detailed Answer:
+    """)
+
+    prompt = prompt_template.format(context=context_text, question=query_text)
+
+    model = OllamaLLM(model="mistral:latest", use_gpu=True)
+    response_text = model.invoke(prompt)
+
+    return response_text
+
+
+@csrf_exempt
+@api_view(['GET', 'POST'])
+def generate_response_view(request):
+    """
+    Widok do generowania odpowiedzi na podstawie pytania użytkownika.
+    """
     if request.method == 'GET':
-        return JsonResponse({'history': chat_history})
+        user_message = request.GET.get('message', '')  # Pobierz z URL dla GET
+    elif request.method == 'POST':
+        user_message = request.data.get('message', '')  # Pobierz z treści dla POST
+    else:
+        return JsonResponse({"error": "Invalid method"}, status=405)
 
-    return JsonResponse({'error': 'Invalid request method.'}, status=405)
+    if not user_message:
+        return JsonResponse({"error": "No message provided"}, status=400)
 
-# Inicjalizacja modelu
-MODEL = 'llama-3.1-70b-versatile'
-api_key = settings.GROQ_API_KEY
-llm = ChatGroq(model=MODEL, api_key=api_key, temperature=0)
+    try:
+        response = generate_response_from_rag(user_message)
+        return JsonResponse({"response": response})
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
 
-# Szablon zapytania
-default_prompt = ChatPromptTemplate.from_messages([
-    ("system", "Jesteś pomocnym asystentem. Odpowiadaj wyłącznie w języku polskim."),
-    ("human", "{message}")
-])
-
-chat_chain = default_prompt | llm | StrOutputParser()
-
-# Zmienna do przechowywania wiadomości
-current_user_message = None
 
 @csrf_exempt
 @api_view(['POST'])
@@ -39,37 +72,87 @@ def send_message(request):
     """
     Endpoint do wysyłania wiadomości od użytkownika.
     """
-    global current_user_message
+    user_message = request.data.get('message', '')  # Pobierz wiadomość z frontendu
+    if user_message:
+        # Generowanie odpowiedzi na podstawie zapytania
+        response = generate_response_from_rag(user_message)
 
-    if request.method == 'POST':
-        user_message = request.data.get('message', '')  # Pobierz wiadomość z frontendu
-        if user_message:
-            # Zapisz wiadomość
-            current_user_message = user_message
-            return JsonResponse({"message": "Message received. Use '/get-response/' to get the response."})
-        return JsonResponse({"error": "No message provided"}, status=400)
+        # Zapisz odpowiedź w historii
+        chat_history = ChatHistory(user_message=user_message, model_response=response)
+        chat_history.save()
+
+        return JsonResponse({"response": response})
+
+    return JsonResponse({"error": "No message provided"}, status=400)
+
 
 @csrf_exempt
 @api_view(['GET'])
-def get_response(request):
+def get_chat_history(request):
     """
-    Endpoint do pobierania odpowiedzi na zapytanie od bota.
+    Endpoint do pobierania historii rozmów.
     """
-    global current_user_message
+    chat_history = ChatHistory.objects.all()
+    history = [{"user_message": entry.user_message, "model_response": entry.model_response, "timestamp": entry.timestamp} for entry in chat_history]
+    return JsonResponse({'history': history})
 
-    if current_user_message:
-        try:
-            response = chat_chain.invoke({"message": current_user_message})  # Odpowiedź modelu
 
-            # Zapisz odpowiedź i wiadomość w historii
-            chat_history = ChatHistory(user_message=current_user_message, model_response=response)
-            chat_history.save()
+# Funkcja do obliczania identyfikatorów chunków
+def calculate_chunk_ids(chunks):
+    last_page_id = None
+    current_chunk_index = 0
 
-            # Wyczyszczenie wiadomości po uzyskaniu odpowiedzi
-            current_user_message = None
+    for chunk in chunks:
+        source = chunk.metadata.get("source")
+        page = chunk.metadata.get("page")
+        current_page_id = f"{source}:{page}"
 
-            return JsonResponse({"response": response})  # Zwróć odpowiedź modelu
-        except Exception as e:
-            return JsonResponse({"error": f"Error: {str(e)}"}, status=500)
+        if current_page_id == last_page_id:
+            current_chunk_index += 1
+        else:
+            current_chunk_index = 0
 
-    return JsonResponse({"error": "No message to respond to."}, status=400)
+        chunk_id = f"{current_page_id}:{current_chunk_index}"
+        last_page_id = current_page_id
+
+        chunk.metadata["id"] = chunk_id
+
+    return chunks
+
+"""-----------------------------Database and pdf loader--------------------------------------------------"""
+# Function to load PDFs into Chroma database
+def load_documents_and_add_to_chroma():
+    document_loader = PyPDFDirectoryLoader("../../RAG/data")
+    documents = document_loader.load()
+
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=800,
+        chunk_overlap=80,
+        length_function=len,
+        is_separator_regex=False,
+    )
+    chunks = text_splitter.split_documents(documents)
+
+    db = Chroma(persist_directory=CHROMA_PATH, embedding_function=OllamaEmbeddings(model="nomic-embed-text"))
+    chunks_with_ids = calculate_chunk_ids(chunks)
+
+    existing_items = db.get(include=[])
+    existing_ids = set(existing_items["ids"])
+
+    new_chunks = []
+    for chunk in chunks_with_ids:
+        if chunk.metadata["id"] not in existing_ids:
+            new_chunks.append(chunk)
+
+    if new_chunks:
+        new_chunk_ids = [chunk.metadata["id"] for chunk in new_chunks]
+        db.add_documents(new_chunks, ids=new_chunk_ids)
+        db.persist()
+
+
+@csrf_exempt  # Disable CSRF for testing purposes; consider adding proper CSRF handling
+def load_pdf(request):
+    if request.method == 'POST':
+        # Handle the PDF upload logic here
+        return JsonResponse({'message': 'PDF uploaded successfully'}, status=200)
+    return JsonResponse({'error': 'Invalid request method'}, status=400)

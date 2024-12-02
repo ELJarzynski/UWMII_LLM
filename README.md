@@ -32,7 +32,7 @@ To ensure the app runs correctly, follow these steps based on your usage type:
    - **For slow but free usage**, switch to the `ollama` branch and follow the instructions below.
    - **For paid usage**, stay on the `master` branch.
 
-2. **Create your `.enc` file** in the Django project.
+2. **Create your `.env` file** in the Django project.
 
 3. **Set the absolute path for the database storage** in the `.env` file.
 

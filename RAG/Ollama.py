@@ -3,7 +3,7 @@ from langchain_chroma import Chroma
 from langchain.prompts import ChatPromptTemplate
 from langchain_ollama import OllamaLLM, OllamaEmbeddings
 
-CHROMA_PATH = "../LLM/chat/database"
+CHROMA_PATH = "ollama_database"
 
 PROMPT_TEMPLATE = """
 You are a helpful assistant answering questions based strictly on the provided context. 
@@ -67,4 +67,4 @@ def query_rag(query_text: str):
 
 
 if __name__ == "__main__":
-    print(query_rag("Number of hours per semester for databases"))
+    print(query_rag("Number of ects points for databases"))

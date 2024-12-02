@@ -7,13 +7,13 @@ This is a small web application featuring a chatbot that provides answers to que
 * **Language Model & API:** Powered by LangChain Open API and Ollama
 
 ### Dataset and Scope
-The dataset used for the RAG system consists of PDFs that describe course syllabi from the University of Warmia and Mazury. Since this is a small project developed for coursework, it specifically includes data only for first semester.
+The dataset used for the RAG system consists of PDFs that describe course syllabi from the University of Warmia and Mazury. Since this is a small project developed for coursework, it specifically includes data only for few courses from first semester.
 ## Installation
 
 ### Prerequisites
 Make sure you have Docker installed on your machine.
 
-### Setting Up the Backend
+### Setting Up
 
 1. **Clone the repository:**
    ```bash
@@ -24,5 +24,24 @@ Make sure you have Docker installed on your machine.
    ```bash
    docker-compose up --build
 
-### Ensuring Open API conectivity
-To make sure the app is running as it should be. Go to [OpenAi](https://platform.openai.com/api-keys) Log in and create api key for free then paste it in your Django settings file (`settings.py`) or  (`.env`)
+### Ensuring Connectivity
+
+To ensure the app runs correctly, follow these steps based on your usage type:
+
+1. **Choose your usage option:**
+   - **For slow but free usage**, switch to the `ollama` branch and follow the instructions below.
+   - **For paid usage**, stay on the `master` branch.
+
+2. **Create your `.enc` file** in the Django project.
+
+3. **Set the absolute path for the database storage** in the `.env` file.
+
+   - **For free usage:** Load PDF files using `PDF_ollama_loader.py`.
+   - **For paid usage:** Load PDF files using `PDF_openai_loader.py`.
+4. **Load PDF files**
+5. **For free usage:**
+   - Install [Ollama](https://ollama.com) on your device and install the `mistral:latest` model.
+
+6. **For paid usage:**
+   - Go to [OpenAI](https://platform.openai.com/api-keys), log in, create an API key, and paste it into your Django `.env` file.
+![Intro Image](./images/intro.png)

@@ -15,11 +15,3 @@ services:
     ports:
       - "8080:8080"
     command: ["npm", "run", "serve"]
-
-  ollama:
-    image: ollama/ollama:latest # Jeśli masz obraz Ollama dostępny
-    ports:
-      - "5000:5000" # Możesz wybrać odpowiedni port, na którym będzie działać Ollama
-    command: [ "serve" ]
-    environment:
-      - MODEL=mistral:latest # Wybierz model do uruchomienia

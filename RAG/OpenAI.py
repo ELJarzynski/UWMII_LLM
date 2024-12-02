@@ -3,9 +3,10 @@ from langchain_community.document_loaders import PyPDFDirectoryLoader
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.schema.document import Document
 from langchain_chroma import Chroma
-from langchain_openai import OpenAIEmbeddings
+from langchain_openai.embeddings import OpenAIEmbeddings
 from langchain.chains.question_answering import load_qa_chain
-from langchain_community.chat_models import ChatOpenAI
+from langchain_openai import ChatOpenAI
+
 
 import os
 from dotenv import load_dotenv
@@ -71,4 +72,4 @@ def query_rag(query_text: str):
 
 
 if __name__ == "__main__":
-    print(query_rag("Number of hours per semester for databases"))
+    print(query_rag("Number of ects points for databases"))

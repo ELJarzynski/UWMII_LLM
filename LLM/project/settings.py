@@ -4,11 +4,10 @@ from dotenv import load_dotenv
 
 
 load_dotenv()
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+
+OPENAI_AI_KEY = os.getenv("OPENAI_AI_KEY")
 DB_PATH = os.getenv("DB_PATH")
 BASE_DIR = Path(__file__).resolve().parent.parent
-
-# settings.py
 CHROMA_PATH = os.path.join(BASE_DIR, DB_PATH)
 
 # SECURITY WARNING: keep the secret key used in production secret!

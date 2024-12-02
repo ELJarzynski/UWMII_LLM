@@ -2,7 +2,7 @@ import time
 from OpenAI import query_rag as openai_query
 from Ollama import query_rag as ollama_query
 
-query_text = "Number of hours per semester for databases"
+query_text = "Number of ects points for databases"
 
 # Measure time and get response from Ollama
 start_time_ollama = time.time()

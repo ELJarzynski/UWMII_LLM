@@ -29,12 +29,12 @@ Make sure you have Docker installed on your machine.
 To ensure the app runs correctly, follow these steps based on your usage type:
 
 1. **Choose your usage option:**
-   - **For slow but free usage**, switch to the `ollama` branch and follow the instructions below.
+   - **For slow but free usage**, switch to the `ollama` branch.
    - **For paid usage**, stay on the `master` branch.
 
 2. **Create your `.env` file** in the Django project.
 
-3. **Set the absolute path for the database storage** in the `.env` file.
+3. **Upload PDF's and change directory `database` folder to `chat` folder**.
 
    - **For free usage:** Load PDF files using `PDF_ollama_loader.py`.
    - **For paid usage:** Load PDF files using `PDF_openai_loader.py`.

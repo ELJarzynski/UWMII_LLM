@@ -44,4 +44,4 @@ To ensure the app runs correctly, follow these steps based on your usage type:
 
 6. **For paid usage:**
    - Go to [OpenAI](https://platform.openai.com/api-keys), log in, create an API key, and paste it into your Django `.env` file.
-![Intro Image](./images/intro.png)
+![alt table](https://github.com/ELJarzynski/UWMII_LLM/blob/master/images/Intro.png)

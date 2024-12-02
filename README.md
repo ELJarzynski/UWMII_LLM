@@ -24,7 +24,7 @@ Make sure you have Docker installed on your machine.
    ```bash
    docker-compose up --build
 
-### Ensuring Connectivity
+## Ensuring Connectivity
 
 To ensure the app runs correctly, follow these steps based on your usage type:
 

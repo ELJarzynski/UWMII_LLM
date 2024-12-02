@@ -11,10 +11,12 @@ from dotenv import load_dotenv
 import os
 
 
+
 load_dotenv()
-CHROMA_PATH = settings.CHROMA_PATH
-openai_api_key = os.getenv("OPENAI_API_KEY")
-openai.api_key = openai_api_key
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+CHROMA_PATH = os.path.join(BASE_DIR, 'database')
+openai_api_key = settings.OPENAI_AI_KEY
+
 
 def generate_response_from_rag(query_text: str):
     """
@@ -26,7 +28,7 @@ def generate_response_from_rag(query_text: str):
     context_text = "\n\n---\n\n".join([doc.page_content for doc, _score in results])
     prompt_template = PromptTemplate.from_template(""" 
     You are a helpful assistant answering questions based strictly on the provided context. 
-    Provide a straight response. 
+    Provide a detailed response. 
     If the answer to the question cannot be found in the context, do not reply or make anything up.
 
     Context:

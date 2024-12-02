@@ -7,7 +7,7 @@ This is a small web application featuring a chatbot that provides answers to que
 * **Language Model & API:** Powered by LangChain Open API and Ollama
 
 ### Dataset and Scope
-The dataset used for the RAG system consists of PDFs that describe course syllabi from the University of Warmia and Mazury. Since this is a small project developed for coursework, it specifically includes data only for few courses from first semester.
+The dataset used for the RAG system consists of PDFs that describe course syllabi from the University of Warmia and Mazury. Since this is a small project developed for coursework, it specifically includes data only for courses from first semester.
 ## Installation
 
 ### Prerequisites
